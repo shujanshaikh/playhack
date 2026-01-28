@@ -5,62 +5,127 @@ import { colors } from "../colors";
 
 type InlineToken = Tokens.Strong | Tokens.Em | Tokens.Codespan | Tokens.Text | Tokens.Link | Tokens.Br;
 
-const renderInline = (inlineTokens: InlineToken[] | undefined, keyPrefix: string): React.ReactNode[] => {
-  if (!inlineTokens) return [];
-  return inlineTokens.map((t, i) => {
+const renderInlineTokens = (tokens: Token[] | undefined, keyPrefix: string): React.ReactNode[] => {
+  if (!tokens) return [];
+
+  return tokens.flatMap((t, i) => {
     const key = `${keyPrefix}-${i}`;
+
     switch (t.type) {
       case "strong":
-        return <Text key={key} bold color={colors.text}>{t.text}</Text>;
+        return <Text key={key} bold color={colors.text}>{(t as Tokens.Strong).text}</Text>;
       case "em":
-        return <Text key={key} italic color={colors.accent}>{t.text}</Text>;
+        return <Text key={key} italic color={colors.muted}>{(t as Tokens.Em).text}</Text>;
       case "codespan":
-        return <Text key={key} color={colors.code}>{t.text}</Text>;
+        return <Text key={key} color={colors.accent}>{(t as Tokens.Codespan).text}</Text>;
       case "link":
-        return <Text key={key} color={colors.link} underline>{t.text}</Text>;
+        return <Text key={key} color={colors.accent} underline>{(t as Tokens.Link).text}</Text>;
       case "br":
         return <Text key={key}>{"\n"}</Text>;
+      case "text": {
+        const textToken = t as Tokens.Text;
+        // Text tokens can have nested tokens for inline formatting
+        if (textToken.tokens && textToken.tokens.length > 0) {
+          return renderInlineTokens(textToken.tokens, key);
+        }
+        return <Text key={key} color={colors.text}>{textToken.text}</Text>;
+      }
       default:
-        return <Text key={key} color={colors.text}>{t.raw}</Text>;
+        if ("text" in t) {
+          return <Text key={key} color={colors.text}>{(t as { text: string }).text}</Text>;
+        }
+        if ("raw" in t) {
+          return <Text key={key} color={colors.text}>{(t as { raw: string }).raw}</Text>;
+        }
+        return null;
+    }
+  }).filter(Boolean);
+};
+
+const renderListItemContent = (item: Tokens.ListItem, keyPrefix: string): React.ReactNode[] => {
+  // List items contain tokens that need to be flattened
+  const results: React.ReactNode[] = [];
+
+  item.tokens.forEach((token, i) => {
+    const key = `${keyPrefix}-${i}`;
+
+    if (token.type === "text") {
+      const textToken = token as Tokens.Text;
+      if (textToken.tokens && textToken.tokens.length > 0) {
+        results.push(...renderInlineTokens(textToken.tokens, key));
+      } else {
+        results.push(<Text key={key} color={colors.text}>{textToken.text}</Text>);
+      }
+    } else if (token.type === "paragraph") {
+      const paraToken = token as Tokens.Paragraph;
+      if (paraToken.tokens) {
+        results.push(...renderInlineTokens(paraToken.tokens, key));
+      }
+    } else {
+      results.push(...renderInlineTokens([token], key));
     }
   });
+
+  return results;
 };
 
 const renderToken = (token: Token, index: number): React.ReactNode => {
   switch (token.type) {
-    case "heading":
+    case "heading": {
+      const headingToken = token as Tokens.Heading;
       return (
         <Box key={index} marginTop={1}>
-          <Text bold color={colors.text}>{renderInline(token.tokens as InlineToken[], `h-${index}`)}</Text>
+          <Text bold color={colors.text}>
+            {renderInlineTokens(headingToken.tokens, `h-${index}`)}
+          </Text>
         </Box>
       );
-    case "paragraph":
+    }
+    case "paragraph": {
+      const paraToken = token as Tokens.Paragraph;
       return (
         <Box key={index} marginTop={1}>
-          <Text color={colors.text}>{renderInline(token.tokens as InlineToken[], `p-${index}`)}</Text>
+          <Text color={colors.text}>
+            {renderInlineTokens(paraToken.tokens, `p-${index}`)}
+          </Text>
         </Box>
       );
-    case "code":
+    }
+    case "code": {
+      const codeToken = token as Tokens.Code;
       return (
         <Box key={index} marginTop={1} flexDirection="column">
-          <Text color={colors.muted}> {token.lang || "code"}</Text>
-          <Text color={colors.code}>{token.text}</Text>
+          {codeToken.lang && <Text color={colors.muted}>{codeToken.lang}</Text>}
+          <Text color={colors.accent}>{codeToken.text}</Text>
         </Box>
       );
-    case "list":
+    }
+    case "list": {
+      const listToken = token as Tokens.List;
       return (
         <Box key={index} flexDirection="column" marginTop={1}>
-          {token.items.map((item: Tokens.ListItem, i: number) => (
-            <Text key={i} color={colors.text}>  · {renderInline(item.tokens as InlineToken[], `li-${index}-${i}`)}</Text>
+          {listToken.items.map((item, i) => (
+            <Box key={i}>
+              <Text color={colors.muted}>  · </Text>
+              <Text color={colors.text}>
+                {renderListItemContent(item, `li-${index}-${i}`)}
+              </Text>
+            </Box>
           ))}
         </Box>
       );
-    case "blockquote":
+    }
+    case "blockquote": {
+      const bqToken = token as Tokens.Blockquote;
       return (
         <Box key={index} marginTop={1}>
-          <Text color={colors.muted}>  │ {renderInline(token.tokens as InlineToken[], `bq-${index}`)}</Text>
+          <Text color={colors.muted}>  │ </Text>
+          <Text color={colors.muted}>
+            {renderInlineTokens(bqToken.tokens, `bq-${index}`)}
+          </Text>
         </Box>
       );
+    }
     case "space":
       return null;
     default:

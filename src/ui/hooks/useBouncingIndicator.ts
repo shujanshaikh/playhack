@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 
-export const useBouncingIndicator = (width: number = 20, speed: number = 50, enabled: boolean = true) => {
+export const useBouncingIndicator = (
+  width: number = 20,
+  speed: number = 50,
+  enabled: boolean = true
+) => {
   const [position, setPosition] = useState(0);
   const directionRef = useRef(1);
 

@@ -12,7 +12,7 @@ interface AppProps {
   onExit?: () => void;
 }
 
-const INDICATOR_WIDTH = 24;
+const INDICATOR_WIDTH = 20;
 
 export const App: React.FC<AppProps> = ({ initialTask, onSubmit, onExit }) => {
   const { exit } = useApp();
@@ -72,7 +72,6 @@ export const App: React.FC<AppProps> = ({ initialTask, onSubmit, onExit }) => {
     }
   }, [state, handleEscape]));
 
-  // Handle initial task on mount
   useEffect(() => {
     if (initialTask && !hasInitialized.current) {
       hasInitialized.current = true;
@@ -85,8 +84,8 @@ export const App: React.FC<AppProps> = ({ initialTask, onSubmit, onExit }) => {
       {state === "input" && (
         <Box flexDirection="column">
           <HorizontalRule />
-          <Box paddingY={0}>
-            <Text color={colors.prompt}> {">"} </Text>
+          <Box>
+            <Text color={colors.muted}> › </Text>
             <PromptInput
               value={taskInput}
               onChange={setTaskInput}
@@ -107,7 +106,7 @@ export const App: React.FC<AppProps> = ({ initialTask, onSubmit, onExit }) => {
             indicatorWidth={INDICATOR_WIDTH}
           />
           {output && (
-            <Box marginTop={1} paddingLeft={3}>
+            <Box marginTop={1} paddingLeft={2}>
               <MarkdownText>{output}</MarkdownText>
             </Box>
           )}
@@ -117,21 +116,21 @@ export const App: React.FC<AppProps> = ({ initialTask, onSubmit, onExit }) => {
       {state === "complete" && (
         <Box flexDirection="column">
           <HorizontalRule />
-          <Box paddingY={0}>
+          <Box>
             <Text color={colors.success}> ✓ </Text>
             <Text color={colors.muted}>{currentTask}</Text>
           </Box>
           <HorizontalRule />
           {output && (
-            <Box marginTop={1} paddingLeft={3}>
+            <Box marginTop={1} paddingLeft={2}>
               <MarkdownText>{output}</MarkdownText>
             </Box>
           )}
-          <Box marginTop={1} paddingLeft={3}>
+          <Box marginTop={1} paddingLeft={2}>
             <Text color={colors.muted}>enter </Text>
-            <Text color={colors.accent}>new task</Text>
+            <Text color={colors.text}>new task</Text>
             <Text color={colors.muted}>  esc </Text>
-            <Text color={colors.accent}>exit</Text>
+            <Text color={colors.text}>exit</Text>
           </Box>
         </Box>
       )}
@@ -139,19 +138,19 @@ export const App: React.FC<AppProps> = ({ initialTask, onSubmit, onExit }) => {
       {state === "error" && (
         <Box flexDirection="column">
           <HorizontalRule />
-          <Box paddingY={0}>
+          <Box>
             <Text color={colors.error}> ✗ </Text>
             <Text color={colors.muted}>{currentTask}</Text>
           </Box>
           <HorizontalRule />
-          <Box marginTop={1} paddingLeft={3}>
+          <Box marginTop={1} paddingLeft={2}>
             <Text color={colors.error}>{error}</Text>
           </Box>
-          <Box marginTop={1} paddingLeft={3}>
+          <Box marginTop={1} paddingLeft={2}>
             <Text color={colors.muted}>enter </Text>
-            <Text color={colors.accent}>retry</Text>
+            <Text color={colors.text}>retry</Text>
             <Text color={colors.muted}>  esc </Text>
-            <Text color={colors.accent}>exit</Text>
+            <Text color={colors.text}>exit</Text>
           </Box>
         </Box>
       )}
