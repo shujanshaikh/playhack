@@ -5,7 +5,6 @@
   "private": true,
   "scripts": {
     "start": "bun run src/ui/index.tsx",
-    "demo": "bun run src/ui/demo.tsx",
     "cli": "bun run src/cli.ts",
     "test": "bun test"
   },

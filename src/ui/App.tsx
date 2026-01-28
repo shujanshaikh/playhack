@@ -124,11 +124,7 @@ export const App: React.FC<AppProps> = ({ initialTask, onSubmit, onExit }: AppPr
         });
         setOutput(result);
       } else {
-        const words = "This is a demo response. The browser agent would execute your task and stream the results here.".split(" ");
-        for (const word of words) {
-          await new Promise((r) => setTimeout(r, 100));
-          setOutput((prev) => prev + (prev ? " " : "") + word);
-        }
+        throw new Error("No submit handler provided");
       }
       setState("complete");
     } catch (err) {
